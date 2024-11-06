@@ -8,10 +8,22 @@
             <img src="http://www.fillster.com/images/pictures/10p.jpg" class="card-img" alt="...">
         </div>
         <div class="col-md-8">
-            <div class="card-body">
-            <h6 class="card-title"><b>Price: ${{ list.price }}</b></h5>
-            <p class="card-text">{{ list.description }}</p>
-            <p class="card-text"><small class="text-muted">{{ list.date }}</small></p>
+            <div class="card-body">    
+                <h6 class="card-title"><b>Price: ${{ list.price }}</b></h5>
+                <p class="card-text">{{ list.description }}</p>
+                <p class="card-text">Created by: {{list.owner.username}}</p>
+                <h6 class="card-title"><b>Bids:</b></h5>
+                <ol>
+                    {% for bid in bids %}
+                    <li>
+                        <p class="card-text">Price: {{bid.price}}</p>
+                        <p class="card-text">Bidder: {{bid.bidder}}</p>
+                    </li>
+                    {% empty %}
+                        <p class="card-text">No bids yet</p>
+                    {% endfor %}
+                </ol>
+                <p class="card-text"><small class="text-muted">{{ list.date }}</small></p>
             </div>
         </div>
         </div>

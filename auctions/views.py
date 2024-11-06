@@ -1,10 +1,10 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Listing
+from .models import User, Listing, Bids
 
 def index(request):
     return render(request, "auctions/index.html", {
@@ -67,6 +67,11 @@ def categories(request):
     pass
 
 def lists(request, list_id):
+    try:
+        list = Listing.objects.get(id=list_id)
+    except Listing.DoesNotExist:
+        raise Http404("Flight not found.")
     return render(request, "auctions/list.html", {
-        "list": Listing.objects.get(id=list_id)
+        "list": Listing.objects.get(id=list_id),
+        "bids": list.bids.all()
     })
