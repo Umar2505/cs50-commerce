@@ -3,8 +3,15 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse
+from django import forms
 
 from .models import User, Listing, Bids
+
+
+class Lists(forms.Form):
+    title = forms.CharField(max_length=200)
+    price = forms.FloatField()
+    description = forms.CharField(widget=forms.Textarea)
 
 def index(request):
     return render(request, "auctions/index.html", {
@@ -70,8 +77,23 @@ def lists(request, list_id):
     try:
         list = Listing.objects.get(id=list_id)
     except Listing.DoesNotExist:
-        raise Http404("Flight not found.")
+        raise Http404("List not found.")
     return render(request, "auctions/list.html", {
         "list": Listing.objects.get(id=list_id),
         "bids": list.bids.all()
+    })
+
+def add(request):
+    if request.method == "POST":
+        user = request.user
+        form = Lists(request.POST)
+        if form.is_valid():
+            l = Listing()
+            l.owner = user
+            l.title = form.cleaned_data['title']
+            l.description = form.cleaned_data['description']
+            l.price = form.cleaned_data['price']
+            l.save()
+    return render(request, "auctions/add.html", {
+        "form": Lists
     })
