@@ -23,6 +23,21 @@
                         <p class="card-text">No bids yet</p>
                     {% endfor %}
                 </ol>
+                {% if user.is_authenticated %}
+                <h6 class="card-title">Make a bid:</h6>
+                {% if prince %}
+                <div class="alert alert-warning" role="alert">
+                    Your bid should be more than the current price of the listing!
+                </div>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <input type="submit">
+                </form>
+                {% else %}
+                <a href="{% url 'login' %}">Log in to make a bid</a>
+                {% endif %}
                 <p class="card-text"><small class="text-muted">{{ list.date }}</small></p>
             </div>
         </div>

@@ -15,4 +15,4 @@ class Listing(models.Model):
 class Bids(models.Model):
     price = models.FloatField()
     bidder = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bidder")
-    listing = models.ManyToManyField(Listing, related_name="bids")
+    listing = models.ForeignKey(Listing,on_delete=models.CASCADE, related_name="bids")

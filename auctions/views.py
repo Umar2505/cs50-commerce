@@ -13,6 +13,9 @@ class Lists(forms.Form):
     price = forms.FloatField()
     description = forms.CharField(widget=forms.Textarea)
 
+class MakeABid(forms.Form):
+    price = forms.FloatField()
+
 def index(request):
     return render(request, "auctions/index.html", {
         "listings": Listing.objects.all()
@@ -78,9 +81,30 @@ def lists(request, list_id):
         list = Listing.objects.get(id=list_id)
     except Listing.DoesNotExist:
         raise Http404("List not found.")
+    if request.method == "POST":
+        bid = MakeABid(request.POST)
+        if bid.is_valid():
+            if list.price >= bid.cleaned_data["price"]:
+                return render(request, "auctions/list.html", {
+                    "list": Listing.objects.get(id=list_id),
+                    "bids": list.bids.all(),
+                    "prince": True,
+                    "form": MakeABid
+                })
+            else:
+                list.price = bid.cleaned_data["price"]
+                list.save()
+                b = Bids()
+                b.bidder = request.user
+                b.listing = list
+                b.price = bid.cleaned_data["price"]
+                b.save()
+                return HttpResponseRedirect(reverse("list", args=(list_id,)))
     return render(request, "auctions/list.html", {
         "list": Listing.objects.get(id=list_id),
-        "bids": list.bids.all()
+        "bids": list.bids.all(),
+        "form": MakeABid,
+        "prince": False
     })
 
 def add(request):
@@ -94,6 +118,7 @@ def add(request):
             l.description = form.cleaned_data['description']
             l.price = form.cleaned_data['price']
             l.save()
+        return HttpResponseRedirect(reverse("index"))
     return render(request, "auctions/add.html", {
         "form": Lists
     })
