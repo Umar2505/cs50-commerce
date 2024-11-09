@@ -12,6 +12,7 @@ class Lists(forms.Form):
     title = forms.CharField(max_length=200)
     price = forms.FloatField()
     description = forms.CharField(widget=forms.Textarea)
+    img = forms.CharField(label="Image URL")
 
 class MakeABid(forms.Form):
     price = forms.FloatField()
@@ -100,6 +101,13 @@ def lists(request, list_id):
                 b.price = bid.cleaned_data["price"]
                 b.save()
                 return HttpResponseRedirect(reverse("list", args=(list_id,)))
+    if list.owner == request.user:
+                return render(request, "auctions/list.html", {
+                    "list": Listing.objects.get(id=list_id),
+                    "bids": list.bids.all(),
+                    "no_bids": True,
+                    "form": MakeABid
+                })
     return render(request, "auctions/list.html", {
         "list": Listing.objects.get(id=list_id),
         "bids": list.bids.all(),
@@ -117,6 +125,8 @@ def add(request):
             l.title = form.cleaned_data['title']
             l.description = form.cleaned_data['description']
             l.price = form.cleaned_data['price']
+            if form.cleaned_data['img']:
+                l.img = form.cleaned_data['img']
             l.save()
         return HttpResponseRedirect(reverse("index"))
     return render(request, "auctions/add.html", {

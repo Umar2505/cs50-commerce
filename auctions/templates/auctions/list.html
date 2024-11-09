@@ -5,7 +5,7 @@
     <div class="card mb-3">
         <div class="row no-gutters">
         <div class="col-md-4">
-            <img src="http://www.fillster.com/images/pictures/10p.jpg" class="card-img" alt="...">
+            <img src="{{ list.img }}" class="card-img" alt="...">
         </div>
         <div class="col-md-8">
             <div class="card-body">    
@@ -23,7 +23,7 @@
                         <p class="card-text">No bids yet</p>
                     {% endfor %}
                 </ol>
-                {% if user.is_authenticated %}
+                {% if user.is_authenticated and not no_bids %}
                 <h6 class="card-title">Make a bid:</h6>
                 {% if prince %}
                 <div class="alert alert-warning" role="alert">
@@ -35,7 +35,7 @@
                     {{ form }}
                     <input type="submit">
                 </form>
-                {% else %}
+                {% elif not no_bids %}
                 <a href="{% url 'login' %}">Log in to make a bid</a>
                 {% endif %}
                 <p class="card-text"><small class="text-muted">{{ list.date }}</small></p>
