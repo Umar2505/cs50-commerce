@@ -2,45 +2,49 @@
 
 {% block body %}
     <h3>Listing: {{list.title}}</h3>
-    <div class="card mb-3">
-        <div class="row no-gutters">
-        <div class="col-md-4">
-            <img src="{{ list.img }}" class="card-img" alt="...">
+    {% if watchlist %}
+    <p style="color:white; background-color: grey;">Watchlist</p>
+    {% endif %}
+    <img src="{{ list.img }}" alt="...">
+    <p class="card-text">{{ list.description }}</p>
+    <h5 class="card-title"><b>Price: ${{ list.price }}</b></h5>
+    {% if prince %}
+        <div class="alert alert-warning" role="alert">
+            Your bid should be more than the current price of the listing!
         </div>
-        <div class="col-md-8">
-            <div class="card-body">    
-                <h6 class="card-title"><b>Price: ${{ list.price }}</b></h5>
-                <p class="card-text">{{ list.description }}</p>
-                <p class="card-text">Created by: {{list.owner.username}}</p>
-                <h6 class="card-title"><b>Bids:</b></h5>
-                <ol>
-                    {% for bid in bids %}
-                    <li>
-                        <p class="card-text">Price: {{bid.price}}</p>
-                        <p class="card-text">Bidder: {{bid.bidder}}</p>
-                    </li>
-                    {% empty %}
-                        <p class="card-text">No bids yet</p>
-                    {% endfor %}
-                </ol>
-                {% if user.is_authenticated and not no_bids %}
-                <h6 class="card-title">Make a bid:</h6>
-                {% if prince %}
-                <div class="alert alert-warning" role="alert">
-                    Your bid should be more than the current price of the listing!
-                </div>
-                {% endif %}
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form }}
-                    <input type="submit">
-                </form>
-                {% elif not no_bids %}
-                <a href="{% url 'login' %}">Log in to make a bid</a>
-                {% endif %}
-                <p class="card-text"><small class="text-muted">{{ list.date }}</small></p>
-            </div>
-        </div>
-        </div>
-    </div>
+    {% endif %}
+    
+    {% if user.is_authenticated and not no_bids %}
+        <h6 class="card-title">Make a bid:</h6>
+        {{bids}} bids made so far.
+        {% if yours %}
+        Your bid is current bid
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit">
+        </form>
+    {% endif %}
+    {% if user.is_authenticated and no_bids %}
+    <h6 class="card-title"><b>Bids:</b></h5>
+        <ol>
+            {% for bid in bids %}
+            <li>
+                <p class="card-text" style="margin: 0;">Price: {{bid.price}}</p>
+                <p class="card-text">Bidder: {{bid.bidder}}</p>
+            </li>
+            <br>
+            {% empty %}
+                <p class="card-text">No bids yet</p>
+            {% endfor %}
+        </ol>
+    {% endif %}
+    {% if not no_bids and not user.is_authenticated %}
+        <a href="{% url 'login' %}">Log in to make a bid</a>
+    {% endif %}
+    <br>
+    <h6>Details:</h6>
+    <p>Created by: {{list.owner.username}}</p>
+    <p><small class="text-muted">{{ list.date }}</small></p>
 {% endblock %}

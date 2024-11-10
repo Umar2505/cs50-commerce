@@ -9,13 +9,13 @@ from .models import User, Listing, Bids
 
 
 class Lists(forms.Form):
-    title = forms.CharField(max_length=200)
-    price = forms.FloatField()
-    description = forms.CharField(widget=forms.Textarea)
-    img = forms.CharField(label="Image URL")
+    title = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'placeholder': 'Title'}))
+    price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price'}))
+    description = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Description', 'type': 'textarea'}))
+    img = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Image URL'}), required=False)
 
 class MakeABid(forms.Form):
-    price = forms.FloatField()
+    price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price'}), label="")
 
 def index(request):
     return render(request, "auctions/index.html", {
@@ -78,19 +78,29 @@ def categories(request):
     pass
 
 def lists(request, list_id):
+    yours = False
     try:
         list = Listing.objects.get(id=list_id)
     except Listing.DoesNotExist:
         raise Http404("List not found.")
+    
+    try:
+        ba = Bids.objects.get(price = list.price)
+    except:
+        pass
+    else:
+        if ba.bidder == request.user:
+            yours = True
     if request.method == "POST":
         bid = MakeABid(request.POST)
         if bid.is_valid():
-            if list.price >= bid.cleaned_data["price"]:
+            if bid.cleaned_data["price"] <= list.price:
                 return render(request, "auctions/list.html", {
                     "list": Listing.objects.get(id=list_id),
-                    "bids": list.bids.all(),
+                    "bids": len(list.bids.all()),
                     "prince": True,
-                    "form": MakeABid
+                    "form": MakeABid,
+                    "yours": yours
                 })
             else:
                 list.price = bid.cleaned_data["price"]
@@ -106,13 +116,15 @@ def lists(request, list_id):
                     "list": Listing.objects.get(id=list_id),
                     "bids": list.bids.all(),
                     "no_bids": True,
-                    "form": MakeABid
+                    "form": MakeABid,
+                    "yours": yours
                 })
     return render(request, "auctions/list.html", {
         "list": Listing.objects.get(id=list_id),
-        "bids": list.bids.all(),
+        "bids": len(list.bids.all()),
         "form": MakeABid,
-        "prince": False
+        "prince": False,
+        "yours": yours
     })
 
 def add(request):
