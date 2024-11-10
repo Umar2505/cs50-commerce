@@ -12,6 +12,8 @@ class Listing(models.Model):
     date = models.DateTimeField(auto_now=True)
     description = models.TextField(blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="owner", blank=True)
+    watchlist = models.ManyToManyField(User, related_name="watchlist", blank=True)
+    category = models.CharField(blank=True, default="No Category Listed", max_length=128)
 
 class Bids(models.Model):
     price = models.FloatField()

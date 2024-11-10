@@ -13,6 +13,7 @@ class Lists(forms.Form):
     price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price'}))
     description = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Description', 'type': 'textarea'}))
     img = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Image URL'}), required=False)
+    category = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Category'}), required=False)
 
 class MakeABid(forms.Form):
     price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price'}), label="")
@@ -79,6 +80,7 @@ def categories(request):
 
 def lists(request, list_id):
     yours = False
+    watch = False
     try:
         list = Listing.objects.get(id=list_id)
     except Listing.DoesNotExist:
@@ -92,25 +94,34 @@ def lists(request, list_id):
         if ba.bidder == request.user:
             yours = True
     if request.method == "POST":
-        bid = MakeABid(request.POST)
-        if bid.is_valid():
-            if bid.cleaned_data["price"] <= list.price:
-                return render(request, "auctions/list.html", {
-                    "list": Listing.objects.get(id=list_id),
-                    "bids": len(list.bids.all()),
-                    "prince": True,
-                    "form": MakeABid,
-                    "yours": yours
-                })
+        if "watchlist" in request.POST:
+            user = request.user
+            if list.watchlist.filter(id=user.id).exists():
+                list.watchlist.remove(user)
+                watch = False
             else:
-                list.price = bid.cleaned_data["price"]
-                list.save()
-                b = Bids()
-                b.bidder = request.user
-                b.listing = list
-                b.price = bid.cleaned_data["price"]
-                b.save()
-                return HttpResponseRedirect(reverse("list", args=(list_id,)))
+                list.watchlist.set([user])
+                watch = True
+        if "bid_on" in request.POST:
+            bid = MakeABid(request.POST)
+            if bid.is_valid():
+                if bid.cleaned_data["price"] <= list.price:
+                    return render(request, "auctions/list.html", {
+                        "list": Listing.objects.get(id=list_id),
+                        "bids": len(list.bids.all()),
+                        "prince": True,
+                        "form": MakeABid,
+                        "yours": yours
+                    })
+                else:
+                    list.price = bid.cleaned_data["price"]
+                    list.save()
+                    b = Bids()
+                    b.bidder = request.user
+                    b.listing = list
+                    b.price = bid.cleaned_data["price"]
+                    b.save()
+                    return HttpResponseRedirect(reverse("list", args=(list_id,)))
     if list.owner == request.user:
                 return render(request, "auctions/list.html", {
                     "list": Listing.objects.get(id=list_id),
@@ -119,12 +130,16 @@ def lists(request, list_id):
                     "form": MakeABid,
                     "yours": yours
                 })
+    user = request.user
+    if list.watchlist.filter(id=user.id).exists():
+        watch = True
     return render(request, "auctions/list.html", {
         "list": Listing.objects.get(id=list_id),
         "bids": len(list.bids.all()),
         "form": MakeABid,
         "prince": False,
-        "yours": yours
+        "yours": yours,
+        "watch": watch
     })
 
 def add(request):
@@ -137,10 +152,18 @@ def add(request):
             l.title = form.cleaned_data['title']
             l.description = form.cleaned_data['description']
             l.price = form.cleaned_data['price']
+            l.category = form.cleaned_data['category']
             if form.cleaned_data['img']:
                 l.img = form.cleaned_data['img']
             l.save()
         return HttpResponseRedirect(reverse("index"))
     return render(request, "auctions/add.html", {
         "form": Lists
+    })
+
+def watchlist(request):
+    user = request.user
+    return render(request, "auctions/index.html", {
+        "listings": user.watchlist.all(),
+        "watch": True
     })
