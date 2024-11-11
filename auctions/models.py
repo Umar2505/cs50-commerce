@@ -14,6 +14,8 @@ class Listing(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="owner", blank=True)
     watchlist = models.ManyToManyField(User, related_name="watchlist", blank=True)
     category = models.CharField(blank=True, default="No Category Listed", max_length=128)
+    inactive = models.BooleanField(blank=True, default=False)
+
 
 class Bids(models.Model):
     price = models.FloatField()

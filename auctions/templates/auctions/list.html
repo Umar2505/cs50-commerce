@@ -1,7 +1,16 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    {% if not no_bids and user.is_authenticated %}
+    {% if inactive and not yours %}
+    <div class="alert alert-primary" role="alert">
+            This Listing was closed by the owner
+      </div>
+    {% elif inactive and yours %}
+    <div class="alert alert-success" role="alert">
+        Your bid won this listing
+      </div>
+    {% endif %}
+    {% if not no_bids and user.is_authenticated and not inactive %}
         <form method="post">
             {% csrf_token %}
             {% if not watch %}
@@ -21,7 +30,7 @@
         </div>
     {% endif %}
     
-    {% if user.is_authenticated and not no_bids %}
+    {% if user.is_authenticated and not no_bids and not inactive %}
         <h6 class="card-title">Make a bid:</h6>
         {{bids}} bids made so far.
         {% if yours %}
@@ -46,6 +55,12 @@
                 <p class="card-text">No bids yet</p>
             {% endfor %}
         </ol>
+    {% if len != 0 and not inactive%}
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" value="Close the Listing" class="btn btn-outline-danger" name="close">
+    </form>
+    {% endif %}
     {% endif %}
     {% if not no_bids and not user.is_authenticated %}
         <a href="{% url 'login' %}">Log in to make a bid</a>
@@ -58,6 +73,5 @@
             Category: {{list.category}}
         </li>
     </ul>
-    <p></p>
     <p><small class="text-muted">{{ list.date }}</small></p>
 {% endblock %}

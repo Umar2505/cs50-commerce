@@ -94,6 +94,10 @@ def lists(request, list_id):
         if ba.bidder == request.user:
             yours = True
     if request.method == "POST":
+        if "close" in request.POST:
+            list.inactive = True
+            list.save()
+            return HttpResponseRedirect(reverse("list", args=(list_id,)))
         if "watchlist" in request.POST:
             user = request.user
             if list.watchlist.filter(id=user.id).exists():
@@ -111,7 +115,8 @@ def lists(request, list_id):
                         "bids": len(list.bids.all()),
                         "prince": True,
                         "form": MakeABid,
-                        "yours": yours
+                        "yours": yours,
+                        "inactive": list.inactive
                     })
                 else:
                     list.price = bid.cleaned_data["price"]
@@ -122,14 +127,16 @@ def lists(request, list_id):
                     b.price = bid.cleaned_data["price"]
                     b.save()
                     return HttpResponseRedirect(reverse("list", args=(list_id,)))
-    if list.owner == request.user:
-                return render(request, "auctions/list.html", {
-                    "list": Listing.objects.get(id=list_id),
-                    "bids": list.bids.all(),
-                    "no_bids": True,
-                    "form": MakeABid,
-                    "yours": yours
-                })
+    if list.owner == request.user:     
+        return render(request, "auctions/list.html", {
+            "list": Listing.objects.get(id=list_id),
+            "bids": list.bids.all(),
+            "no_bids": True,
+            "form": MakeABid,
+            "yours": yours,
+            "inactive": list.inactive,
+            "len": len(list.bids.all())
+        })
     user = request.user
     if list.watchlist.filter(id=user.id).exists():
         watch = True
@@ -139,7 +146,8 @@ def lists(request, list_id):
         "form": MakeABid,
         "prince": False,
         "yours": yours,
-        "watch": watch
+        "watch": watch,
+        "inactive": list.inactive
     })
 
 def add(request):
