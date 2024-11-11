@@ -21,3 +21,9 @@ class Bids(models.Model):
     price = models.FloatField()
     bidder = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bidder")
     listing = models.ForeignKey(Listing,on_delete=models.CASCADE, related_name="bids")
+
+class Comments(models.Model):
+    text = models.TextField(blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment")
+    listing = models.ForeignKey(Listing,on_delete=models.CASCADE, related_name="comments")
+    date = models.DateTimeField(auto_now=True)

@@ -1,0 +1,14 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+<div class="list-group">
+    {% for cat in categories %}
+    {% if cat != "" %}
+        <a href="{% url 'cats' cat %}" class="list-group-item list-group-item-action">
+        {{cat}}
+        </a>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% endblock %}

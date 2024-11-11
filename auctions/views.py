@@ -5,22 +5,28 @@ from django.shortcuts import render
 from django.urls import reverse
 from django import forms
 
-from .models import User, Listing, Bids
+from .models import User, Listing, Bids, Comments
 
 
 class Lists(forms.Form):
-    title = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'placeholder': 'Title'}))
-    price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price'}))
-    description = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Description', 'type': 'textarea'}))
-    img = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Image URL'}), required=False)
-    category = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Category'}), required=False)
+    title = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'placeholder': 'Title', 'class': 'form-control'}))
+    price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price' , 'class': 'form-control'}))
+    description = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Description', 'type': 'textarea', 'class': 'form-control'}))
+    img = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Image URL', 'class': 'form-control'}), required=False)
+    category = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Category', 'class': 'form-control'}), required=False)
 
 class MakeABid(forms.Form):
-    price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price'}), label="")
+    price = forms.FloatField(widget=forms.TextInput(attrs={'placeholder': 'Price', 'class': 'form-control'}), label="")
 
 def index(request):
     return render(request, "auctions/index.html", {
-        "listings": Listing.objects.all()
+        "listings": Listing.objects.exclude(inactive=True)
+    })
+
+def closed(request):
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.exclude(inactive=False),
+        "closed": True
     })
 
 
@@ -76,7 +82,15 @@ def register(request):
         return render(request, "auctions/register.html")
 
 def categories(request):
-    pass
+    return render(request, "auctions/category.html", {
+        "categories": Listing.objects.values_list("category", flat=True).distinct()
+    })
+
+def cats(request, cat):
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.filter(category = cat),
+        "cat": cat
+    })
 
 def lists(request, list_id):
     yours = False
@@ -94,6 +108,13 @@ def lists(request, list_id):
         if ba.bidder == request.user:
             yours = True
     if request.method == "POST":
+        if "comment" in request.POST:
+            c = Comments()
+            c.author = request.user
+            c.listing = list
+            c.text = request.POST["text"]
+            c.save()
+            return HttpResponseRedirect(reverse("list", args=(list_id,)))
         if "close" in request.POST:
             list.inactive = True
             list.save()
@@ -116,7 +137,8 @@ def lists(request, list_id):
                         "prince": True,
                         "form": MakeABid,
                         "yours": yours,
-                        "inactive": list.inactive
+                        "inactive": list.inactive,
+                        "comments": list.comments.all()
                     })
                 else:
                     list.price = bid.cleaned_data["price"]
@@ -135,7 +157,8 @@ def lists(request, list_id):
             "form": MakeABid,
             "yours": yours,
             "inactive": list.inactive,
-            "len": len(list.bids.all())
+            "len": len(list.bids.all()),
+            "comments": list.comments.all()
         })
     user = request.user
     if list.watchlist.filter(id=user.id).exists():
@@ -147,7 +170,8 @@ def lists(request, list_id):
         "prince": False,
         "yours": yours,
         "watch": watch,
-        "inactive": list.inactive
+        "inactive": list.inactive,
+        "comments": list.comments.all()
     })
 
 def add(request):

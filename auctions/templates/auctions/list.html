@@ -39,7 +39,7 @@
         <form method="post">
             {% csrf_token %}
             {{ form }}
-            <input type="submit" value="Place Bid" class="btn btn-primary" name="bid_on">
+            <input type="submit" value="Place Bid" class="btn btn-primary" name="bid_on" style="margin-top: 10px;">
         </form>
     {% endif %}
     {% if user.is_authenticated and no_bids %}
@@ -74,4 +74,33 @@
         </li>
     </ul>
     <p><small class="text-muted">{{ list.date }}</small></p>
+    <h5>Comments:</h5>
+    {% if user.is_authenticated and not inactive%}
+    <h6>Make a comment</h6>
+    <form method="post">
+        {% csrf_token %}
+        <textarea name="text" id="" class="form-control" placeholder="Your Comment" rows="3"></textarea>
+        <br>
+        <input type="submit" name="comment" class="btn btn-primary">
+    </form>
+    {% elif not inactive%}
+    <a href="{% url 'login' %}">Log in to comment</a>
+    {% endif %}
+    <hr>
+    {% for com in comments %}
+    <div class="card mb-4">
+        <div class="card-body">
+          <p>{{ com.text }}</p>
+
+          <div class="d-flex justify-content-between">
+            <div class="d-flex flex-row align-items-center">
+              <p class="small mb-0 ms-2">{{ com.author }}</p>
+            </div>
+            <div class="d-flex flex-row align-items-center">
+              <p class="small text-muted mb-0">{{ com.date }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
 {% endblock %}

@@ -1,10 +1,14 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    {% if not watch %}
-        <h2>Active Listings</h2>
-    {% else %}
+    {% if watch %}
         <h2>Watchlist</h2>
+    {% elif closed %}
+        <h2>Closed Listings</h2>
+    {% elif cat %}
+        <h2>Listings with <b>{{cat}}</b> category:</h2>
+    {% else %}
+        <h2>Active Listings</h2>
     {% endif %}
         {% for list in listings %}
         <a href="{% url 'list' list.id %}" style="text-decoration: none; color: black;">
